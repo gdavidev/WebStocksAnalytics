@@ -1,0 +1,30 @@
+@charset "UTF-8";
+
+:root {
+	--primary-color: #164916;
+	--secondary-color: #569632;
+	--tertiary-color: #49215;
+	--whitetext-color: #F8F8F8;
+	--blacktext-color: #161626;
+}
+
+#navbar {
+	display: flex;
+	justify-content: space-between;
+	width: 100vw;
+	height: 2rem;
+	background-color: var(--primary-color);
+}
+#nav-menu ul {
+	display: flex;
+	column-gap: 2rem;
+	list-style-type: none;
+}
+
+#nav-profile {
+	display: flex;
+}
+
+#footer {
+	background-color: var(--primary-color);
+}
