@@ -1,30 +1,126 @@
 @charset "UTF-8";
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,500;0,700;0,800;1,300;1,500;1,700;1,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wdth,wght@0,75..100,300..800;1,75..100,300..800&display=swap');
 :root {
-	--primary-color: #164916;
-	--secondary-color: #569632;
-	--tertiary-color: #49215;
+	--primary-color: #0460D9;
+	--secondary-color: #706513;
+	--tertiary-color: #B57114;
+	--highligh-color: #0597F2;
+	--background-color: #161626;
 	--whitetext-color: #F8F8F8;
-	--blacktext-color: #161626;
+	--blacktext-color: #090909;
+}
+
+* {
+	padding: 0;
+	margin: 0;
+	font-family: 'open sans';
+	font-weight: 500;
+}
+
+body {
+	width: 100vw;
+	background-color: var(--background-color);
+	overflow-x: hidden; 
+}
+
+#navbar, #footer {
+	font-family: 'poppins';
+	font-weight: 600;	
+	background-color: var(--primary-color);
+	color: var(--whitetext-color);	
+	width: 100vw;
+	box-sizing: border-box;
+	z-index: 100;
 }
 
 #navbar {
+	position: fixed;
+	top: 0;
+	font-size: 1.15rem;
 	display: flex;
-	justify-content: space-between;
-	width: 100vw;
-	height: 2rem;
-	background-color: var(--primary-color);
+	height: 3rem;
+    align-items: center;	
 }
-#nav-menu ul {
+#nav-logo {
+	position: fixed;
+	height: 3rem;
+	padding: 0.5rem;
+	box-sizing: border-box;
+}
+#nav-menu {	
+	width: 100vw;
+	height: 100%;
 	display: flex;
-	column-gap: 2rem;
+	justify-content: center;
+	align-items: center;
 	list-style-type: none;
+}
+#nav-menu li {
+	height: 100%;
+}
+#nav-menu a {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+	padding: 1.5rem;
+	box-sizing: border-box;
+}
+#nav-menu a:hover {
+	background-color: #220110;
 }
 
 #nav-profile {
+	position: fixed;
+	height: 3rem;
+	padding: 0.5rem;
+	right: 0;
 	display: flex;
+	justify-content: center;
+	align-items: center;
+	column-gap: 0.25rem;
+}
+#nav-profile img {
+	border-radius: 50%;
 }
 
+main {	
+	min-height: calc(100vh - 5rem);
+    box-sizing: content-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: content-box;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0 8%;
+}
+
+h1, h2, h3, p {
+	text-align: left;
+	color: var(--whitetext-color);	
+}
+
+h1, h2, h3 {
+	width: 100%;
+	display: inline-block;	
+	max-width: 80ch;
+	box-sizing: border-box;
+}
+h1, h2, h3 {
+	font-weight: 800;
+}	
+
 #footer {
-	background-color: var(--primary-color);
+	padding: 0.5rem 0.5rem;
+	font-size: 0.75rem;
+	height: 2rem;
+	box-sizing: border-box;
+}
+#footer p {
+	width: 100%;
+	text-align: center;
 }

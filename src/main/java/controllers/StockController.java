@@ -8,16 +8,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import models.Account;
-import models.FixedIncomeStock;
-import models.VariableIncomeStock;
+import models.stocks.FixedIncomeStock;
+import models.stocks.VariableIncomeStock;
 
-@WebServlet("/StockController")
+@WebServlet(name ="/StockController",
+			urlPatterns = {"/stocks/view", "/stocks/buy", "/stocks/sell"})
 public class StockController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
-    public StockController() {
-        super();
-    }
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		response.getWriter().append("Served at: ").append(request.getContextPath());
@@ -30,7 +27,7 @@ public class StockController extends HttpServlet {
 	// FIXED INCOME STOCKS
 	public static FixedIncomeStock LoadCheckingAccount(Account holder) {
 		// SQL
-		return new FixedIncomeStock(0, "", "", 0f, 0);
+		return new FixedIncomeStock(0, "", "", "", 0.0f, 0);
 	}
 	public static void StoreCheckingAccount() {
 		// SQL
@@ -42,7 +39,7 @@ public class StockController extends HttpServlet {
 	// VARIABLE INCOME STOCKS
 	public static VariableIncomeStock LoadAutoInvestmentAccount(Account account) {
 		// SQL
-		return new VariableIncomeStock(0, "", "", 0f, 0f);
+		return new VariableIncomeStock(0, "", "", "", 0f, 0f);
 	}
 	public static void StoreAutoInvestmentAccount() {
 		// SQL
