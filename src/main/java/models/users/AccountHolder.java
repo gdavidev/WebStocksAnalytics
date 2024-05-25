@@ -1,4 +1,4 @@
-package models;
+package models.users;
 
 public class AccountHolder {
 	public int id;

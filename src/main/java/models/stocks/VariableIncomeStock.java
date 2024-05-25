@@ -7,5 +7,9 @@ public class VariableIncomeStock extends Stock {
 		super(id, companyName, code, description, price);
 		this.expectancy = expectancy;
 	}
+	public VariableIncomeStock(int id, String companyName, String code, String description, float price, float expectancy, float priceVariation) {
+		super(id, companyName, code, description, price, priceVariation);
+		this.expectancy = expectancy;
+	}
 
 }

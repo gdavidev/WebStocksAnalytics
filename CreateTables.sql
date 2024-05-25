@@ -6,27 +6,24 @@ CREATE TABLE users (
     email			VARCHAR(256) NOT NULL,
     loginPassword 	VARCHAR(256) NOT NULL,
     salt 			CHAR(5) NOT NULL,
-    isActive		BIT	NOT NULL DEFAULT 1
-);
-
-CREATE TABLE addresses (
-	id 				INT PRIMARY KEY AUTO_INCREMENT,
-    houseNumber		VARCHAR(128) NOT NULL,
-    complement		VARCHAR(128),
-	street			VARCHAR(128) NOT NULL,
-	neighborhood	VARCHAR(128) NOT NULL,
-	city			VARCHAR(128) NOT NULL,
-	state			VARCHAR(128) NOT NULL,
-	country			VARCHAR(128) NOT NULL,
-	zipcode			VARCHAR(128) NOT NULL
+    isAdmin			BIT DEFAULT 0
 );
 
 CREATE TABLE userInfo (
-	userId		INT NOT NULL,
-	phone		VARCHAR(13) NOT NULL,
-    addressId	INT NOT NULL,
-    FOREIGN KEY (userId) REFERENCES users(id),
-    FOREIGN KEY (addressId) REFERENCES addresses(id)
+	userId			INT NOT NULL,
+    completeName	VARCHAR(60) NOT NULL,
+	phone			VARCHAR(13) NOT NULL,
+    personTypeId	INT NOT NULL,
+    document		VARCHAR(14)	NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users(id)
+); SELECT * FROM userInfo;
+
+CREATE TABLE accounts (
+	id				INT PRIMARY KEY AUTO_INCREMENT,
+    holderId 		INT NOT NULL,
+    accountTypeId 	INT NOT NULL,
+    balance			INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (holderId) REFERENCES users(id)
 );
 
 CREATE TABLE stockTypes (
@@ -84,7 +81,7 @@ WITH hiestHighsTable AS (
 			FROM tableMomentRanks)
 		SELECT *, ROW_NUMBER() OVER(PARTITION BY stockId) AS rowNum
 		FROM tableMomentRanksWithMaxMoment WHERE momentRank > maxMomentRank - 2)
-	SELECT rt1.stockId, rt1.price AS latestPrice, ROUND((rt2.price - rt1.price) / rt2.price, 2) AS lastVariationPerc
+	SELECT rt1.stockId, rt1.price AS latestPrice, ROUND((rt2.price - rt1.price) * 100 / rt2.price, 2) * -1 AS lastVariationPerc
 	FROM resultTable AS rt1
 	INNER JOIN resultTable AS rt2
 		ON rt1.stockId = rt2.stockId AND rt1.momentRank = rt2.momentRank + 1)
@@ -92,11 +89,11 @@ SELECT s.id, s.companyName, s.stockCode, s.stockTypeId, h.latestPrice, h.lastVar
 FROM stocks s
 INNER JOIN hiestHighsTable h
 	ON s.id = h.stockId
-ORDER BY h.lastVariationPerc DESC
+ORDER BY h.lastVariationPerc ASC
 LIMIT 10;
 
 SELECT stockId, COUNT(stockId) FROM stockhistory GROUP BY stockId;
-SELECT * FROM stockhistory WHERE stockId = 22;
+SELECT * FROM stockhistory WHERE stockId = 45;
 
 
 SELECT * FROM stockhistory

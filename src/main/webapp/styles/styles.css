@@ -26,7 +26,6 @@ body {
 }
 
 #navbar, #footer {
-	font-family: 'poppins';
 	font-weight: 600;	
 	background-color: var(--primary-color);
 	color: var(--whitetext-color);	
@@ -60,7 +59,9 @@ body {
 #nav-menu li {
 	height: 100%;
 }
-#nav-menu a {
+#nav-menu a,
+#nav-menu a:visited,
+#nav-menu a:focus {
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -68,9 +69,12 @@ body {
 	height: 100%;
 	padding: 1.5rem;
 	box-sizing: border-box;
+	color: var(--whitetext-color);
+	text-decoration: none;
+	transition: background-color 0.3s;
 }
 #nav-menu a:hover {
-	background-color: #220110;
+	background-color: rgb(2, 46, 117);
 }
 
 #nav-profile {
@@ -85,6 +89,8 @@ body {
 }
 #nav-profile img {
 	border-radius: 50%;
+	height: 20px;
+	width: 20px;
 }
 
 main {	
@@ -97,6 +103,7 @@ main {
     align-items: center;
     box-sizing: border-box;
     padding: 0 8%;
+    margin-top: 3rem;
 }
 
 h1, h2, h3, p {

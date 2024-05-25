@@ -1,4 +1,6 @@
-package models;
+package models.accounts;
+
+import models.users.AccountHolder;
 
 public abstract class Account {
 	private int id = 0;

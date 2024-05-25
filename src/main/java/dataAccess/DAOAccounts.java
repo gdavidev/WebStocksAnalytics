@@ -1,10 +1,10 @@
-package dataAccessClasses;
+package dataAccess;
 
 import java.net.ConnectException;
 import java.util.ArrayList;
 
 import models.stocks.Stock;
 
-public class DAOAccounts {
+public final class DAOAccounts {
 	
 }

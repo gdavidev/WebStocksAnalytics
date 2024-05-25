@@ -1,7 +1,10 @@
-package dataAccessClasses;
+package dataAccess;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public abstract class DAO {
 	private String driver = "org.mariadb.jdbc.Driver";
@@ -17,5 +20,12 @@ public abstract class DAO {
 			System.out.println(e);
 		}
 		return null;
+	}
+	
+	protected ResultSet executeQuery(String query) throws SQLException {
+		Connection conn = this.connect();
+		PreparedStatement pst = conn.prepareStatement(query);
+		ResultSet rs = pst.executeQuery();
+		return rs;
 	}
 }

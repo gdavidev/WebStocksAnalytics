@@ -1,4 +1,6 @@
-package models;
+package models.accounts;
+
+import models.users.AccountHolder;
 
 public class AutoInvestmentAccount extends Account {
 	private static final float privatePersonMonthlyTax = 0.1f;

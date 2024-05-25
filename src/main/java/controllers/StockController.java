@@ -1,29 +1,33 @@
 package controllers;
 
 import java.io.IOException;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import models.Account;
+import dataAccess.DAOStocks;
+import models.accounts.Account;
 import models.stocks.FixedIncomeStock;
 import models.stocks.VariableIncomeStock;
 
-@WebServlet(name ="/StockController",
-			urlPatterns = {"/stocks/view", "/stocks/buy", "/stocks/sell"})
+@WebServlet(name = "/StockController",
+			urlPatterns = {"/stocks/view"})//, "/stocks/create", "/stocks/delete"})
 public class StockController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
+	DAOStocks daoStocks = new DAOStocks();
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		doGet(request, response);
 	}
-
+	
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setAttribute("stockList", daoStocks.listAllStocks(0, DAOStocks.ListingOrder.COMPANY_NAME));
+		getServletContext().getRequestDispatcher("/view/stock/stocks.jsp").forward(request, response);
+	}
+	
 	// FIXED INCOME STOCKS
 	public static FixedIncomeStock LoadCheckingAccount(Account holder) {
 		// SQL
