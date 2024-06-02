@@ -25,6 +25,10 @@
 			<required>false</required>
 		</attribute>
 		<attribute>
+			<name>bottomTipText</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
 			<name>required</name>
 			<required>false</required>
 			<type>boolean</type>
@@ -104,6 +108,37 @@
 		<attribute>
 			<name>suggestions-source</name>
 			<required>true</required>
+		</attribute>
+	</tag>
+	
+	<tag>  
+		<name>comboBox</name>
+		<tag-class>customJspComponents.formItems.ComboBoxHandler</tag-class>
+		<attribute>
+			<name>name</name>
+			<required>true</required>
+		</attribute>
+		<attribute>
+			<name>label</name>
+			<required>true</required>
+		</attribute>
+		<attribute>
+			<name>dataSource</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>onChange</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>selectedIndex</name>
+			<required>false</required>
+			<type>int</type>
+		</attribute>
+		<attribute>
+			<name>required</name>
+			<required>false</required>
+			<type>boolean</type>
 		</attribute>
 	</tag>
 </taglib>

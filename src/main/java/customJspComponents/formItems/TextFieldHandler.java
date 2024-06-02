@@ -9,6 +9,7 @@ public class TextFieldHandler extends TagSupport {
 	private String name;
 	private String label;
 	private String placeholder;
+	private String bottomTipText;
 	private boolean required;
 	
 	public void setName(String name) {
@@ -20,21 +21,26 @@ public class TextFieldHandler extends TagSupport {
 	public void setPlaceholder(String placeholder) {
 		this.placeholder = placeholder;
 	}
+	public void setBottomTipText(String bottomTipText) {
+		this.bottomTipText = bottomTipText;
+	}
 	public void setRequired(boolean required) {
 		this.required = required;
 	}
 	
 	public int doStartTag() throws JspException {
+		boolean hasBottomTipText = this.bottomTipText != null;
 		JspWriter out = pageContext.getOut();
 		String elementTemplate =
-			"  <div class='form-item'>"
-			+ "		<p class='form-item-label'>" + this.label + "</p>"
-			+ "		<input type='text' class='form-text-field form-text-box' "
+			"  <div class='mb-3'>"
+			+ "		<label for='" + this.name + "' class='form-label'>" + this.label + "</label>"
+			+ "		<input type='text' class='form-control' " + (hasBottomTipText ? "aria-describedby='" + this.name + "Tip'" : "") 
 			+ " 			id='" + this.name + "'"
 			+ " 			name='" + this.name + "'"
 			+ " 			placeholder='" + this.placeholder + "'"
 			+ "				required='" + (required ? "true" : "false") + "'>"
-			+ "</div>";
+			+ (hasBottomTipText ? "<div id='"+ this.name + "Tip' class='form-text'>" + this.bottomTipText + "</div>" : "")
+			+ "</div>";	    
 		try {
 			out.write(elementTemplate);
 		} catch (Exception e) {

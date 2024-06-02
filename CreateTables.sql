@@ -7,7 +7,7 @@ CREATE TABLE users (
     loginPassword 	VARCHAR(256) NOT NULL,
     salt 			CHAR(5) NOT NULL,
     isAdmin			BIT DEFAULT 0
-);
+); SELECT * FROM users;
 
 CREATE TABLE userInfo (
 	userId			INT NOT NULL,
@@ -18,12 +18,18 @@ CREATE TABLE userInfo (
     FOREIGN KEY (userId) REFERENCES users(id)
 ); SELECT * FROM userInfo;
 
+CREATE TABLE accountTypes (
+	id				INT PRIMARY KEY AUTO_INCREMENT,
+    accountTypeName VARCHAR(30)
+);
+
 CREATE TABLE accounts (
 	id				INT PRIMARY KEY AUTO_INCREMENT,
     holderId 		INT NOT NULL,
     accountTypeId 	INT NOT NULL,
-    balance			INT NOT NULL DEFAULT 0,
-    FOREIGN KEY (holderId) REFERENCES users(id)
+    balance			FLOAT NOT NULL DEFAULT 0,
+    FOREIGN KEY (holderId) REFERENCES users(id),
+    FOREIGN KEY (accountTypeId) REFERENCES accountTypes(id)
 );
 
 CREATE TABLE stockTypes (
@@ -47,29 +53,20 @@ CREATE TABLE stockHistory (
     FOREIGN KEY (stockId) REFERENCES stocks(id)
 );
 
-CREATE TABLE actionLogs (
-	userId		INT NOT NULL,
-    stockId 	INT NOT NULL,
-    actionId	INT NOT NULL,   
-    actionDate	DATETIME NOT NULL,
-    FOREIGN KEY (userId) REFERENCES users(id),
-    FOREIGN KEY (stockId) REFERENCES stocks(id),
-    FOREIGN KEY (actionId) REFERENCES logActions(id)
+CREATE TABLE actionTypes (
+	id			INT PRIMARY KEY AUTO_INCREMENT,
+    actionDesc	VARCHAR(20) NOT NULL
 );
 
-INSERT INTO stockTypes(id, typeDescription)
-VALUES
-(1, 'Direito de subscrição de uma ação ordinária'),
-(2, 'Direito de subscrição de uma ação preferencial'),
-(3, 'Ação Ordinária'),
-(4, 'Ação Preferencial'),
-(5, 'Ação Preferencial – Classe A (PNA)'),
-(6, 'Ação Preferencial – Classe B (PNB)'),
-(7, 'Ação Preferencial – Classe C (PNC)'),
-(8, 'Ação Preferencial – Classe D (PND)'),
-(9, 'Recibo de subscrição sobre ações ordinárias'),
-(10, 'Recibo de subscrição sobre ações preferenciais'),
-(11, 'BDRs e Units');
+CREATE TABLE transactionRegistry (
+	accountId	INT NOT NULL,
+    stockId 	INT NOT NULL,
+    actionId	INT NOT NULL,
+    actionDate	DATETIME NOT NULL,
+    FOREIGN KEY (accountId) REFERENCES accounts(id),
+    FOREIGN KEY (stockId) REFERENCES stocks(id),
+    FOREIGN KEY (actionId) REFERENCES actionTypes(id)
+);
 
 WITH hiestHighsTable AS (
 	WITH resultTable AS (
@@ -92,16 +89,11 @@ INNER JOIN hiestHighsTable h
 ORDER BY h.lastVariationPerc ASC
 LIMIT 10;
 
-SELECT stockId, COUNT(stockId) FROM stockhistory GROUP BY stockId;
-SELECT * FROM stockhistory WHERE stockId = 45;
+SELECT * FROM users;
+SELECT * FROM userinfo;
+SELECT * FROM stocks;
 
-
-SELECT * FROM stockhistory
-INNER JOIN (SELECT stockId, DENSE_RANK() OVER(PARTITION BY stockId ORDER BY moment) AS momentRank FROM stockhistory) as tableMomentRanks
-	ON tableMomentRanks.stockId = stockhistory.stockId
-INNER JOIN (SELECT stockId, MAX(moment) AS maxMoment FROM stockhistory GROUP BY stockId) as tableMaxMoment
-    ON tableMaxMoment.stockId = stockhistory.stockId AND tableMaxMoment.maxMoment < stockhistory.moment;
-
+UPDATE users SET isAdmin = 1 WHERE userName = 'MechAAV';
 SELECT stockId, price, MAX(moment) FROM stockhistory GROUP BY stockId;
 
 SELECT * FROM stockHistory WHERE stockId = 1;

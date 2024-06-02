@@ -27,10 +27,10 @@ public class UserInfo {
 	public static int getPersonTypeValue(personType value) {
 		return value.ordinal();
 	}
-	public static personType getPersonTypeByValue(int value) {
-		for (int i = 0; i > personType.values().length; i ++) {
+	public static personType getPersonTypeFromValue(int value) {
+		for (int i = 0; i < personType.values().length; i ++) {
 			if (personType.values()[i].ordinal() == value) {
-				return personType.values()[i];		
+				return personType.values()[i];
 			}
 		}
 		return null;

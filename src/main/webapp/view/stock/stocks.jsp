@@ -8,45 +8,46 @@
 <html>
 <head>
 	<%@ include file="/components/defaultPageHead.jsp" %>
-	<link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/styles/tables.css">
 	<title>Stocks - VcRiquinho</title>
 </head>
-<body>
+<body class="overflow-x-hidden min-vh-100">
 	<%@ include file="/components/navbar.jsp" %>
-	<main>	
+	<main class="px-5 w-100 d-flex flex-column" style="padding-top: 5rem;">	
 		<h1>Stocks</h1>
 		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque mauris velit, posuere nec mollis a, blandit ut neque. Maecenas iaculis tellus turpis. Cras tincidunt odio ac libero cursus, in porta magna viverra. Nam rhoncus a mauris vitae aliquam. Sed et feugiat quam. Nullam posuere laoreet risus, et euismod nibh tempus nec. Donec vehicula congue ipsum non laoreet.</p><br>
-
-		<div class="scrollable-table-container">
-			<div class="table table-search">
-				<div class="header-row" style="grid-template-columns: 0.5fr 2fr 0.5fr 0.5fr 0.45fr;">
-					<div class="header-cell code-col">Code</div>
-					<div class="header-cell name-col">CompanyName</div>
-					<div class="header-cell price-col">Price(R$)</div>
-					<div class="header-cell price-col">Increase</div>
-					<div class="header-cell action-col">Action</div>
-				</div>
+		
+		<h2>All Stocks</h2>
+		<table class="table table-striped w-50 align-self-center">
+			<thead>
+				<tr>
+					<th scope="col">Code</th>
+					<th scope="col">CompanyName</th>
+					<th scope="col" class="text-end">Price(R$)</th>
+					<th scope="col" class="text-end">Increase</th>
+				</tr>
+			</thead>
+			<tbody>
 				<%for (int i = 0; i < stocks.size(); i++) { %>
-					<div class="content-row" style="grid-template-columns: 0.5fr 2fr 0.5fr 0.5fr 0.45fr;">
-						<div class="content-cell code-col"><%=stocks.get(i).code %></div>
-						<div class="content-cell name-col"><%=stocks.get(i).companyName %></div>
-						<div class="content-cell price-col"><%=stocks.get(i).price %></div>
-						<%if (stocks.get(i).priceVariation > 0) { %>
-							<div class="content-cell priceVarPos-col">
-								<ion-icon name="arrow-up-outline"></ion-icon> <%=String.format("%.2f", stocks.get(i).priceVariation) %>%
-							</div>
-						<%} else { %>
-							<div class="content-cell priceVarNeg-col">
-								<ion-icon name="arrow-down-outline"></ion-icon> <%=String.format("%.2f", stocks.get(i).priceVariation) %>%
-							</div>
-						<%} %>
-						<div class="content-cell action-col">
-							<input id="details|<%=i %>" class="btn btn-primary" type="button" value="Details">
+				<tr>
+					<td><%=stocks.get(i).code %></td>
+					<td><%=stocks.get(i).companyName %></td>
+					<td class="text-end"><%=stocks.get(i).price %></td>
+					<td>
+						<div class="container-fluid d-flex justify-content-between align-items-center" 
+							 style="color: <%=(stocks.get(i).priceVariation) > 0 ? "green": "red" %>">
+							<%if(stocks.get(i).priceVariation > 0) { %>
+								<ion-icon name="arrow-up-outline"></ion-icon>
+								<%=String.format("%.2f", stocks.get(i).priceVariation) %>%
+							<%} else { %>
+								<ion-icon name="arrow-down-outline"></ion-icon>
+								<%=String.format("%.2f", stocks.get(i).priceVariation) %>%
+							<%} %>
 						</div>
-					</div>
+					</td>
+				</tr>						
 				<%} %>
-			</div>
-		</div>
+			</tbody>					
+		</table>		
 	</main>
 	<%@ include file="/components/footer.jsp" %>
 </body>

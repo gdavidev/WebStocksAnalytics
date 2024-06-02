@@ -1,106 +1,95 @@
 package dataAccess;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.Types;
 
+import libs.util.ErrorHandler;
 import models.users.User;
 import models.users.UserInfo;
 
 public final class DAOUsers extends DAO {
 	public int getUserLoginId(String email, String password) {
-		String query =
-			  " SELECT id "
-			+ " FROM users "
-			+ " WHERE email = '" + email + "' "
-			+ "	  AND loginPassword = '" + password + "' "
-			+ " LIMIT 1;";	
+		String query = " SELECT id " + " FROM users " + " WHERE email = '" + email + "' " + "	  AND loginPassword = '"
+				+ password + "' " + " LIMIT 1;";
 		try {
 			ResultSet rs = this.executeQuery(query);
-			if (rs.getFetchSize() == 1) {			
+			if (rs.next())
 				return rs.getInt(1);
-			}
 		} catch (Exception e) {
-			System.out.println(e);
-			return 0;
+			ErrorHandler.printToConsole("getUserLoginId: " + e.toString());
 		}
 		return 0;
 	}
-	
+
 	public User getUser(int id) {
-		String query =
-			  " SELECT " 
-		    + " 	users.id, " 
-		    + "		users.userName, "
-			+ " 	users.email, "
-		    + " 	userInfo.completeName, "
-			+ " 	users.loginPassword, "
-			+ " 	userInfo.phone, "  
-		    + " 	userInfo.personTypeId, "
-			+ "		userInfo.document, " 
-		    + " 	users.isAdmin "
-			+ " FROM users "
-			+ " INNER JOIN userInfo ON userInfo.userId = users.id "
-			+ " WHERE users.id = " + id
-			+ " LIMIT 1;";
+		String query = " SELECT " + " 	users.id, " + "		users.userName, " + " 	users.email, "
+				+ " 	userInfo.completeName, " + " 	users.loginPassword, " + " 	userInfo.phone, "
+				+ " 	userInfo.personTypeId, " + "		userInfo.document, " + " 	users.isAdmin " + " FROM users "
+				+ " INNER JOIN userInfo ON userInfo.userId = users.id " + " WHERE users.id = " + id + " LIMIT 1;";
 		try {
 			ResultSet rs = this.executeQuery(query);
-			if (rs.getFetchSize() == 1) {	
-				return new User(
-					rs.getInt("users.id"), 
-					rs.getString("users.userName"),
-					rs.getString("users.email"),
+			rs.next();
+			return new User(rs.getInt("users.id"), rs.getString("users.userName"), rs.getString("users.email"),
 					rs.getString("users.loginPassword"),
-					new UserInfo(
-						rs.getString("userInfo.completeName"),
-						rs.getString("userInfo.phone"),
-						UserInfo.getPersonTypeByValue(rs.getInt("userInfo.personTypeId")),
-						rs.getString("userInfo.document")
-					),
-					rs.getBoolean("users.isAdmin")
-				);
-			}
+					new UserInfo(rs.getString("userInfo.completeName"), rs.getString("userInfo.phone"),
+							UserInfo.getPersonTypeFromValue(rs.getInt("userInfo.personTypeId")),
+							rs.getString("userInfo.document")),
+					rs.getBoolean("users.isAdmin"));
 		} catch (Exception e) {
-			System.out.println(e);
-			return null;
+			ErrorHandler.printToConsole("getUser: " + e.toString());
 		}
 		return null;
 	}
-	
+
 	public boolean isUserEmailAvailable(String email) {
-		String query =
-			  " SELECT COUNT(*) = 0 "
-			+ " FROM users "
-			+ " WHERE email = '" + email + "' ";
+		String query = " SELECT COUNT(*) = 0 " + " FROM users " + " WHERE email = '" + email + "' ";
 		try {
 			ResultSet rs = this.executeQuery(query);
-			if (rs.getFetchSize() == 1) {	
+			if (rs.getFetchSize() == 1) {
 				return rs.getBoolean(1);
 			}
 		} catch (Exception e) {
-			System.out.println(e);
+			ErrorHandler.printToConsole("isUserEmailAvailable: " + e.toString());
 			return false;
 		}
 		return false;
 	}
-	
+
 	public void storeUser(User user) throws Exception {
-		UserInfo userInfo = user.userInfo;
-		String query =
-				  " BEGIN TRANSACTION "
-				+ "     INSERT INTO "
-				+ "     	users(userName, email, loginPassword) "
-				+ "     VALUES "
-				+ "     	(" + user.name +","+ user.email +","+ user.password + ");"
-				+ "     SELECT LAST_INSERT_ID();"
-				+ "     INSERT INTO "
-				+ "	    	userInfo(userId, completeName, personTypeId, document)"
-				+ "	    VALUES "
-				+ "     	(LAST_INSERT_ID(), "+ userInfo.completeName +","+ userInfo.phone +","+ UserInfo.getPersonTypeValue(userInfo.personTypeId) +","+ userInfo.document +");"
-				+ " COMMIT;";
-			try {
-				ResultSet rs = this.executeQuery(query);
-				user.id = rs.getInt("lastUserId");
-			} catch (Exception e) {
-				System.out.println(e);
-			}
+		String query = "{ call sp_store_user(?,?,?,?,?,?,?,?) }";		
+
+		try (
+			Connection conn = this.connect();
+			CallableStatement pst = conn.prepareCall(query);
+		) {
+			pst.setString(1, user.name);
+			pst.setString(2, user.email);
+			pst.setString(3, user.password);
+			pst.setString(4, user.userInfo.completeName);
+			pst.setString(5, user.userInfo.phone);
+			pst.setInt(6, UserInfo.getPersonTypeValue(user.userInfo.personTypeId));
+			pst.setString(7, user.userInfo.document);
+			pst.registerOutParameter(8, Types.INTEGER);
+			
+			pst.execute();
+			user.id = pst.getInt(8);
+			
+			pst.close();
+		} catch (Exception e) {
+			ErrorHandler.printToConsole("storeUser: " + e.toString());
+		}
 	}
 }
+
+//" CALL sp_store_user("
+//+ "'"+ user.name +"',"
+//+ "'"+ user.email +"',"
+//+ "'"+ user.password +"',"
+//+ "'"+ user.userInfo.completeName +"',"
+//+ "'"+ user.userInfo.phone +"',"
+//+ UserInfo.getPersonTypeValue(user.userInfo.personTypeId) +","
+//+ "'"+ user.userInfo.document + "',"
+//+ " @userId); "
+//+ " SELECT @userId; ";

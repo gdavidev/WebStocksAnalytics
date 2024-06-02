@@ -26,7 +26,7 @@ public final class DAOStocks extends DAO {
 	
 	public ArrayList<Stock> listAllStocks(int quantity, ListingOrder orderBy) {
 		String query = 
-			" WITH hiestHighsTable AS ( "
+			"   WITH hiestHighsTable AS ( "
 			+ " 	WITH resultTable AS ( "
 			+ " 		WITH tableMomentRanksWithMaxMoment AS ( "
 			+ " 			WITH tableMomentRanks AS ( "
@@ -45,27 +45,25 @@ public final class DAOStocks extends DAO {
 			+ " INNER JOIN hiestHighsTable h "
 			+ " 	ON s.id = h.stockId ";				
 		switch (orderBy) {
-			case HIGHEST_INCREASE: 	{ query += " ORDER BY h.lastVariationPerc DESC "; 	break; }
-			case HIGHEST_DECREASE: 	{ query += " ORDER BY h.lastVariationPerc ASC "; 	break; }
-			case STOCK_ID: 		   	{ query += " ORDER BY s.id DESC "; 					break; }
-			case COMPANY_NAME: 		{ query += " ORDER BY s.companyName ASC "; 			break; }
-			case HIGHEST_VALUE: 	{ query += " ORDER BY h.latestPrice DESC "; 		break; }
-			case LOWEST_VALUE: 		{ query += " ORDER BY h.latestPrice ASC "; 			break; } 
+			case HIGHEST_INCREASE: 	{ query += " ORDER BY h.lastVariationPerc DESC "; break; }
+			case HIGHEST_DECREASE: 	{ query += " ORDER BY h.lastVariationPerc ASC "	; break; }
+			case STOCK_ID: 		   	{ query += " ORDER BY s.id DESC "				; break; }
+			case COMPANY_NAME: 		{ query += " ORDER BY s.companyName ASC "		; break; }
+			case HIGHEST_VALUE: 	{ query += " ORDER BY h.latestPrice DESC "		; break; }
+			case LOWEST_VALUE: 		{ query += " ORDER BY h.latestPrice ASC "		; break; } 
 		}
 		query += (quantity > 0 ? " LIMIT " + String.valueOf(quantity) : ""); 
 		try {
-			Connection con = this.connect();
-			PreparedStatement pst = con.prepareStatement(query);
-			ResultSet rs = pst.executeQuery();
+			ResultSet rs = this.executeQuery(query);
 			ArrayList<Stock> result = new ArrayList<>();
 			while (rs.next()) {				
-				int id = Integer.parseInt(rs.getString(1));
+				int id = rs.getInt(1);
 				String companyName = rs.getString(2);
 				String stockCode = rs.getString(3);
 				String stockTypeId = rs.getString(4);
-				float price = Float.parseFloat(rs.getString(5));
-				float priceVariation = Float.parseFloat(rs.getString(6));
-				int gracePeriodDays = Integer.parseInt(rs.getString(7));
+				float price = rs.getFloat(5);
+				float priceVariation = rs.getFloat(6);
+				int gracePeriodDays = rs.getInt(7);
 				
 				if (gracePeriodDays > 0) {
 					result.add(new FixedIncomeStock(id, companyName, stockCode + stockTypeId, "", price, gracePeriodDays, priceVariation));
@@ -73,7 +71,6 @@ public final class DAOStocks extends DAO {
 					result.add(new VariableIncomeStock(id, companyName, stockCode + stockTypeId, "", price, 0.0f, priceVariation));
 				}
 			}
-			con.close();
 			return result;
 		} catch (Exception e) {
 			System.out.println(e);

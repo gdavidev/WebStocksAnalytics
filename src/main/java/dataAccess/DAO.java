@@ -26,6 +26,7 @@ public abstract class DAO {
 		Connection conn = this.connect();
 		PreparedStatement pst = conn.prepareStatement(query);
 		ResultSet rs = pst.executeQuery();
+		conn.close();
 		return rs;
 	}
 }

@@ -1,7 +1,14 @@
+-- DROP TABLE actionTypes;
+-- DROP TABLE transactionRegistry;
+-- DROP TABLE accounts;
+-- DROP TABLE accountTypes;
+-- DROP TABLE userInfo;
+-- DROP TABLE users;
+-- DROP TABLE stockHistory;
+-- DROP TABLE stockTypes;
+-- DROP TABLE stocks;
+
 -- CREATE STOCKS --
--- DELETE FROM stocks WHERE NOT companyName = "";
--- ALTER TABLE stocks AUTO_INCREMENT = 1;
--- DROP TABLE IF EXISTS stocks;
 drop procedure if exists createStocks;
 drop table if exists Nomes;
 drop table if exists nameSufixes;
@@ -28,7 +35,7 @@ BEGIN
 		SET companyNameFinal = CONCAT(companyName, ' ', companyNameSufix);
 		SET stockcode = UPPER(CONCAT(MID(companyName, 1, 2), MID(companyNameSufix, 1, 2)));
 		SET stockType = ROUND(RAND() * (11-1)+1, 0);
-        SET gracePeriodDays = ROUND(RAND() * (24-1)+1, 0) * 30;
+        SET gracePeriodDays = CASE WHEN RAND() > 0.75 THEN ROUND(RAND() * (24-1)+1, 0) * 30 ELSE 0 END;
 
 		INSERT INTO stocks(companyName, stockCode, stockTypeId, gracePeriodDays)
 		VALUES (companyNameFinal, stockcode, stockType, gracePeriodDays);
@@ -36,8 +43,10 @@ BEGIN
 		set quantity = quantity - 1;
 	END WHILE;
 END //
-DELIMITER ;  
-call createStocks(120);
+DELIMITER ;
+DROP TABLE Nomes;
+DROP TABLE nameSufixes;
+call createStocks(53);
 select * from stocks;
 
 -- CREATE STOCKHISTORY --
@@ -66,8 +75,23 @@ BEGIN
 	END WHILE;
 END //
 DELIMITER ;
-CALL createStockHistory(20);
-SELECT * FROM stockHistory;
+CALL createStockHistory(200);
+SELECT COUNT(*) FROM stockHistory;
+
+INSERT INTO
+	stockTypes(id, typeDescription)
+VALUES
+	(1, 'Direito de subscrição de uma ação ordinária'),
+	(2, 'Direito de subscrição de uma ação preferencial'),
+	(3, 'Ação Ordinária'),
+	(4, 'Ação Preferencial'),
+	(5, 'Ação Preferencial – Classe A (PNA)'),
+	(6, 'Ação Preferencial – Classe B (PNB)'),
+	(7, 'Ação Preferencial – Classe C (PNC)'),
+	(8, 'Ação Preferencial – Classe D (PND)'),
+	(9, 'Recibo de subscrição sobre ações ordinárias'),
+	(10, 'Recibo de subscrição sobre ações preferenciais'),
+	(11, 'BDRs e Units');
 
 INSERT INTO
 	users(userName, email, loginPassword, salt, isAdmin)
@@ -136,3 +160,137 @@ VALUES
 	(28, '449.198.523-55', '81 99281-1107', 'Jaqueline Elisa Raimunda de Paula', 1),
 	(29, '816.781.553-65', '82 99906-6810', 'Luiz Nathan Manoel Baptista', 1),
 	(30, '162.837.726-76', '68 99156-6039', 'Andreia Isabella Marina D', 1);
+SELECT * FROM users;
+
+INSERT INTO
+	accountTypes(accountTypeName)
+VALUES
+	('CheckingAccount'),
+	('IdrAccount'),
+    ('AutoInvestmentAccount');
+SELECT * FROM accountTypes;
+
+drop procedure if exists createAccountsForAllUsers;
+DELIMITER // 
+CREATE PROCEDURE createAccountsForAllUsers() 
+BEGIN
+	DECLARE hasCheckingAccount INT;
+    DECLARE hasIdrAccount INT;
+    DECLARE hasAutoInvestmentAccount INT;
+    DECLARE userCount INT;
+    DECLARE i INT DEFAULT 1;
+    
+    SELECT COUNT(*) INTO userCount FROM users;    
+	WHILE i < userCount DO
+		SET hasCheckingAccount = 0;
+		SET hasIdrAccount = 0;
+		SET hasAutoInvestmentAccount = 0;        
+		WHILE hasCheckingAccount = 0 AND hasIdrAccount = 0 AND hasAutoInvestmentAccount = 0 DO
+			SET hasCheckingAccount = ROUND(RAND(), 0);
+			SET hasIdrAccount = ROUND(RAND(), 0);
+			SET hasAutoInvestmentAccount = ROUND(RAND(), 0);
+        END WHILE;
+    
+		IF hasCheckingAccount = 1 THEN
+			INSERT INTO accounts(holderId, accountTypeId, balance) VALUES (i, 1, ROUND(RAND() * 20000, 2));
+        END IF;        
+        IF hasIdrAccount = 1 THEN
+			INSERT INTO accounts(holderId, accountTypeId, balance) VALUES (i, 2, ROUND(RAND() * 20000, 2));
+        END IF;
+        IF hasAutoInvestmentAccount = 1 THEN
+			INSERT INTO accounts(holderId, accountTypeId, balance) VALUES (i, 3, ROUND(RAND() * 20000, 2));
+        END IF;
+
+		SET i = i + 1;
+	END WHILE;
+END //
+DELIMITER ;  
+call createAccountsForAllUsers();
+select * from accounts;
+
+INSERT INTO actionTypes(actionDesc)
+VALUES ('buy'), ('sell');
+
+-- GERENERATE TRANSACTION REGISTRY --
+DROP PROCEDURE IF EXISTS createTransactionRegistry;
+DELIMITER // 
+CREATE PROCEDURE createTransactionRegistry(IN totalIterations INT)
+BEGIN
+	DECLARE moment DATETIME DEFAULT DATE_ADD(CURDATE(), INTERVAL -totalIterations DAY);
+    DECLARE operation INT DEFAULT 1;
+    DECLARE canSellStock BOOL DEFAULT 0;
+    DECLARE gracePeriodDays INT DEFAULT 0;
+    
+    -- IDs
+    DECLARE currentAccountId INT DEFAULT 1;
+    DECLARE currentStockId INT DEFAULT 1;
+    
+    -- Iteration Counters
+    DECLARE currentIteration INT DEFAULT -1;
+    DECLARE currentAccount INT DEFAULT 0;
+    DECLARE currentStock INT DEFAULT 0;
+    
+    -- Total Inner Iterations
+    DECLARE accountCount INT;
+    DECLARE stockCount INT;
+    
+    -- Aux Tables
+    DROP TABLE IF EXISTS stockInfo;
+	CREATE TABLE stockInfo SELECT ROW_NUMBER() OVER() AS rowNum, id, gracePeriodDays FROM stocks;
+    DROP TABLE IF EXISTS autoInvestAccountIds;
+	CREATE TABLE autoInvestAccountIds SELECT ROW_NUMBER() OVER() AS rowNum, id FROM accounts WHERE accountTypeId = 3;
+    
+    -- Set Total Inner Iterations Variables
+	SELECT COUNT(*) INTO accountCount FROM autoInvestAccountIds;
+	SELECT COUNT(*) INTO stockCount FROM stockInfo;
+       
+	mainLoop: WHILE currentIteration < totalIterations DO
+		SET moment = DATE_ADD(moment, INTERVAL 1 DAY);
+		SET currentIteration = currentIteration + 1;        
+        SET currentAccount = 1;
+		SET currentStock = 1;
+    
+		accountLoop: WHILE currentAccount < accountCount DO
+			SET currentAccount = currentAccount + 1;
+            IF RAND() < 0.60 THEN -- 60% change of current account do nothing this iteration
+				ITERATE accountLoop;
+			END IF;
+            
+			SELECT id INTO currentAccountId FROM autoInvestAccountIds WHERE rowNum = currentAccount;
+			stockLoop: WHILE currentStock < stockCount DO
+				SET currentStock = currentStock + 1;
+				IF RAND() < 0.80 THEN -- 80% change of current stock not being bought or sold;
+					ITERATE stockLoop;
+				END IF;
+                
+                SELECT id INTO currentStockId FROM stockInfo WHERE rowNum = currentStock;                
+                SET operation = ROUND(RAND() * (2-1)+1, 0);
+                
+                -- If operation is "sell", check if account can sell this stock;
+                IF operation = 2 THEN -- (2 = sell operation);
+					SELECT gracePeriodDays INTO gracePeriodDays FROM stockInfo WHERE id = currentStockId;
+                    IF gracePeriodDays > 0 THEN                    
+						SELECT COUNT(*) > 0 INTO canSellStock
+                        FROM transactionRegistry 
+						INNER JOIN stockInfo ON stockInfo.Id = transactionRegistry.stockId
+						WHERE transactionRegistry.actionId = 1 -- (1 = buy operation);
+							AND DATE_ADD(transactionRegistry.actionDate, INTERVAL stockInfo.gracePeriodDays DAY) < moment;
+						IF canSellStock = 0 THEN
+							ITERATE stockLoop;
+                        END IF;
+					END IF;
+                END IF;
+                
+				INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate)
+				VALUES (currentAccountId, currentStockId, operation, moment);
+			END WHILE;
+        END WHILE;
+	END WHILE;
+    
+    DROP TABLE IF EXISTS accountIds;
+	DROP TABLE IF EXISTS stockInfo;
+END //
+DELIMITER ; 
+CALL createTransactionRegistry(200);
+SELECT * FROM transactionRegistry;
+SELECT COUNT(*) FROM transactionRegistry;
