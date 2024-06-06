@@ -217,8 +217,8 @@ DELIMITER //
 CREATE PROCEDURE createTransactionRegistry(IN totalIterations INT)
 BEGIN
 	DECLARE moment DATETIME DEFAULT DATE_ADD(CURDATE(), INTERVAL -totalIterations DAY);
-    DECLARE operation INT DEFAULT 1;
     DECLARE canSellStock BOOL DEFAULT 0;
+    DECLARE hasEnoughToSell BOOL DEFAULT 0;
     DECLARE gracePeriodDays INT DEFAULT 0;
     
     -- IDs
@@ -259,30 +259,40 @@ BEGIN
 			SELECT id INTO currentAccountId FROM autoInvestAccountIds WHERE rowNum = currentAccount;
 			stockLoop: WHILE currentStock < stockCount DO
 				SET currentStock = currentStock + 1;
-				IF RAND() < 0.80 THEN -- 80% change of current stock not being bought or sold;
-					ITERATE stockLoop;
-				END IF;
                 
-                SELECT id INTO currentStockId FROM stockInfo WHERE rowNum = currentStock;                
-                SET operation = ROUND(RAND() * (2-1)+1, 0);
-                
-                -- If operation is "sell", check if account can sell this stock;
-                IF operation = 2 THEN -- (2 = sell operation);
-					SELECT gracePeriodDays INTO gracePeriodDays FROM stockInfo WHERE id = currentStockId;
-                    IF gracePeriodDays > 0 THEN                    
-						SELECT COUNT(*) > 0 INTO canSellStock
-                        FROM transactionRegistry 
-						INNER JOIN stockInfo ON stockInfo.Id = transactionRegistry.stockId
-						WHERE transactionRegistry.actionId = 1 -- (1 = buy operation);
-							AND DATE_ADD(transactionRegistry.actionDate, INTERVAL stockInfo.gracePeriodDays DAY) < moment;
-						IF canSellStock = 0 THEN
-							ITERATE stockLoop;
-                        END IF;
-					END IF;
+                SELECT id INTO currentStockId FROM stockInfo WHERE rowNum = currentStock; 
+                IF RAND() < 0.50 THEN -- 50% That will sell
+					SELECT t1.boughtCount > t2.soldCount INTO hasEnoughToSell
+					FROM (SELECT COUNT(*) AS boughtCount FROM transactionregistry WHERE actionId = 1 AND accountId = 55 AND stockId = 22) AS t1
+					INNER JOIN (SELECT COUNT(*) AS soldCount FROM transactionregistry WHERE actionId = 2 AND accountId = 55 AND stockId = 22) AS t2;
+                    
+                    IF hasEnoughToSell = 1 THEN                    
+						SELECT gracePeriodDays INTO gracePeriodDays FROM stockInfo WHERE id = currentStockId;
+						IF gracePeriodDays > 0 THEN						
+							SELECT COUNT(*) > 0 INTO canSellStock
+							FROM transactionRegistry 
+							INNER JOIN stockInfo ON stockInfo.Id = transactionRegistry.stockId
+							WHERE transactionRegistry.actionId = 1 -- (1 = buy operation);
+								AND DATE_ADD(transactionRegistry.actionDate, INTERVAL stockInfo.gracePeriodDays DAY) < moment;
+							IF canSellStock = 1 THEN
+								-- SELL STOCK
+								INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate)
+								VALUES (currentAccountId, currentStockId, 2, moment);
+							END IF;
+						ELSE
+                            -- SELL STOCK
+							INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate)
+							VALUES (currentAccountId, currentStockId, 2, moment);
+						END IF;
+                    END IF;
                 END IF;
                 
-				INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate)
-				VALUES (currentAccountId, currentStockId, operation, moment);
+                IF RAND() < 0.50 THEN -- 50% that will buy
+					-- BUY STOCK
+					INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate)
+					VALUES (currentAccountId, currentStockId, 1, moment);
+                END IF;
+                
 			END WHILE;
         END WHILE;
 	END WHILE;

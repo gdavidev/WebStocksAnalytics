@@ -1,23 +1,29 @@
 package models.users;
 
-import java.util.ArrayList;
-
-import models.accounts.Account;
+import models.accounts.AutoInvestmentAccount;
+import models.accounts.CheckingAccount;
+import models.accounts.IdrAccount;
 
 public class AccountHolder {
 	public int holderId;
 	public UserInfo holderInfo;
-	public ArrayList<Account> accounts;
+	public CheckingAccount checkingAccount;
+	public IdrAccount idrAccount;
+	public AutoInvestmentAccount autoInvestmentAccount;
 	
 	public AccountHolder() {
 		this.holderId = 0;
 		this.holderInfo = new UserInfo();
-		this.accounts = new ArrayList<Account>();
+		this.checkingAccount = null;
+		this.idrAccount = null;
+		this.autoInvestmentAccount = null;
 	}
 	
-	public AccountHolder(int holderId, UserInfo holderInfo, ArrayList<Account> accounts) {
+	public AccountHolder(int holderId, UserInfo holderInfo, CheckingAccount checkingAccount, IdrAccount idrAccount, AutoInvestmentAccount autoInvestmentAccount) {
 		this.holderId = holderId;
 		this.holderInfo = holderInfo;
-		this.accounts = accounts;
+		this.checkingAccount = checkingAccount;
+		this.idrAccount = idrAccount;
+		this.autoInvestmentAccount = autoInvestmentAccount;
 	}
 }

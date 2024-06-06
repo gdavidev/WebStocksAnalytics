@@ -10,6 +10,8 @@
 <%@ page import="models.users.UserInfo" %>
 <%
 	ArrayList<AccountHolder> users = (ArrayList<AccountHolder>) request.getAttribute("usersViewData");
+	float finalTotalBalance = 0f;
+	float finalTotalTax = 0f;
 %>
 <!DOCTYPE html>
 <html>
@@ -51,68 +53,44 @@
 				</tr>
 			</thead>
 			<tbody>
-				<% 
-					float finalTotalBalance = 0f;
-					float finalTotalTax = 0f;
-				%>
-				<%for (int i = 0; i < users.size(); i++) {
-					CheckingAccount checkingAccount = null;
-					IdrAccount idrAccount = null;
-					AutoInvestmentAccount autoInvAccount = null;
-					
-					float autoInvAccountBalance = 0f;
-					float idrAccountBalance = 0f;
-					float checkingAccountBalance = 0f;
-					
-					float autoInvAccountTax = 0f;
-					float idrAccountTax = 0f;
-					float checkingAccountTax = 0f;
-					
-					for (int j = 0; j < users.get(i).accounts.size(); j ++) {
-						ArrayList<Account> accounts = users.get(i).accounts;
-						if (accounts.get(j) instanceof CheckingAccount) {
-							checkingAccount = (CheckingAccount) accounts.get(j);
-							checkingAccountBalance = checkingAccount.balance;
-							checkingAccountTax = checkingAccount.getTaxedAmount();
-						}
-						if (accounts.get(j) instanceof IdrAccount) {
-							idrAccount = (IdrAccount) accounts.get(j);
-							idrAccountBalance = idrAccount.balance;
-							idrAccountTax = idrAccount.getTaxedAmount();
-						}
-						if (accounts.get(j) instanceof AutoInvestmentAccount) {
-							autoInvAccount = (AutoInvestmentAccount) accounts.get(j);
-							autoInvAccountBalance = autoInvAccount.balance;
-							autoInvAccountTax = autoInvAccount.getTaxedAmount();
-						}
-					}
-					
-					float totalBalance = autoInvAccountBalance + idrAccountBalance + checkingAccountBalance;
-					float totalTax = autoInvAccountTax + idrAccountTax + checkingAccountTax;
+				<%for (AccountHolder accountHolder : users) { %>
+				<%
+					CheckingAccount checkingAccount = accountHolder.checkingAccount;
+					IdrAccount idrAccount = accountHolder.idrAccount;
+					AutoInvestmentAccount autoInvAccount = accountHolder.autoInvestmentAccount;
+										
+					float totalBalance = 
+							  (autoInvAccount 	!= null ? autoInvAccount.balance 	: 0)
+							+ (idrAccount	 	!= null ? idrAccount.balance 		: 0)
+							+ (checkingAccount 	!= null ? checkingAccount.balance 	: 0);
+					float totalTax = 
+							  (autoInvAccount 	!= null ? autoInvAccount.getTaxedAmount() 	: 0)
+							+ (idrAccount	 	!= null ? idrAccount.getTaxedAmount() 		: 0)
+							+ (checkingAccount 	!= null ? checkingAccount.getTaxedAmount() 	: 0);
 					finalTotalBalance += totalBalance;
 					finalTotalTax += totalTax;
 				%>
 				<tr>
-					<td><%=users.get(i).holderId %></td>
-					<td><%=users.get(i).holderInfo.completeName %></td>
-					<td><%=users.get(i).holderInfo.personTypeId == UserInfo.personType.PRIVATE_PERSON ? "CPF" : "CNPJ" %></td>
+					<td><%= accountHolder.holderId %></td>
+					<td><%= accountHolder.holderInfo.completeName %></td>
+					<td><%= accountHolder.holderInfo.personTypeId == UserInfo.personType.PRIVATE_PERSON ? "CPF" : "CNPJ" %></td>
 					<% if (checkingAccount != null) { %>
-						<td class="text-end"><%=String.format("%.2f", checkingAccountBalance) %></td>
+						<td class="text-end"><%=String.format("%.2f", checkingAccount.balance) %></td>
 						<td class="text-end"><%=String.format("%.2f", checkingAccount.getTaxedAmount()) %></td>					
 					<% } else { %>						
 						<td></td>
 						<td></td>
 					<% } %>
 					<% if (idrAccount != null) { %>
-						<td class="text-end"><%=String.format("%.2f", idrAccountBalance) %></td>
-						<td class="text-end"><%=String.format("%.2f", idrAccountTax) %></td>					
+						<td class="text-end"><%=String.format("%.2f", idrAccount.balance) %></td>
+						<td class="text-end"><%=String.format("%.2f", idrAccount.getTaxedAmount()) %></td>					
 					<% } else { %>						
 						<td></td>
 						<td></td>
 					<% } %>
 					<% if (autoInvAccount != null) { %>
-						<td class="text-end"><%=String.format("%.2f", autoInvAccountBalance) %></td>
-						<td class="text-end"><%=String.format("%.2f", autoInvAccountTax) %></td>					
+						<td class="text-end"><%=String.format("%.2f", autoInvAccount.balance) %></td>
+						<td class="text-end"><%=String.format("%.2f", autoInvAccount.getTaxedAmount()) %></td>					
 					<% } else { %>
 						<td></td>
 						<td></td>

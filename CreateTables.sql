@@ -107,3 +107,12 @@ WHERE sh2.moment IS NULL;
 SELECT * FROM stockHistory sh1
 LEFT JOIN stockHistory sh2 ON (sh1.stockId = sh2.stockId AND sh1.moment < sh2.moment)
 WHERE sh2.moment IS NULL;
+
+SELECT * FROM accounts WHERE accountTypeId = 3;
+
+SELECT s.stockCode, s.companyName, tr.actionId, tr.actionDate  FROM transactionregistry AS tr
+INNER JOIN stocks s ON s.id = tr.stockId
+WHERE tr.accountId = 55;
+
+SELECT t1.boughtCount > t2.soldCount FROM (SELECT COUNT(*) AS boughtCount FROM transactionregistry WHERE actionId = 1 AND accountId = 55 AND stockId = 22) AS t1
+INNER JOIN (SELECT COUNT(*) AS soldCount FROM transactionregistry WHERE actionId = 2 AND accountId = 55 AND stockId = 22) AS t2;

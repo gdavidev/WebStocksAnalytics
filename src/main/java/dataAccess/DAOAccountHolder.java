@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import libs.util.ErrorHandler;
 import models.accounts.Account;
 import models.accounts.AccountsFactory;
+import models.accounts.AutoInvestmentAccount;
+import models.accounts.CheckingAccount;
+import models.accounts.IdrAccount;
+import models.stocks.Stock;
 import models.users.AccountHolder;
 import models.users.UserInfo;
 
@@ -37,12 +41,25 @@ public class DAOAccountHolder extends DAO {
 						accountHolder,
 						rs.getFloat("accounts.balance")
 					);
-				accountHolder.accounts.add(account);
+				if (account instanceof CheckingAccount)
+					accountHolder.checkingAccount = (CheckingAccount) account;
+				else if (account instanceof IdrAccount)
+					accountHolder.idrAccount = (IdrAccount) account;
+				else if (account instanceof AutoInvestmentAccount)
+					accountHolder.autoInvestmentAccount = (AutoInvestmentAccount) account;
 			}
 			return holderList;
 		} catch (Exception e) {
 			ErrorHandler.printToConsole("DAOAccountHolder.getAll" + e.getMessage());
 			return null;
 		}
+	}
+	
+	public AccountHolder getAccountHolder(int userId) {
+		return null;		
+	}
+	
+	public ArrayList<Stock> getAccountTransactions(int userId) {
+		return null;
 	}
 }
