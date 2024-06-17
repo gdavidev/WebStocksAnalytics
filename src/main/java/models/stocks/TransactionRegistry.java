@@ -14,6 +14,7 @@ public class TransactionRegistry {
 	public String stockName;
 	public Date dateTime;
 	public ActionType actionType;
+	public float price;
 	
 	public TransactionRegistry() {
 		this.accountId = 0;
@@ -21,13 +22,15 @@ public class TransactionRegistry {
 		this.stockName = "";
 		this.dateTime = new Date();
 		this.actionType = ActionType.BUY;
+		this.price = 0f;
 	}
 	
-	public TransactionRegistry(int accountId, String stockCode, String stockName, Date dateTime, ActionType actionType) {
+	public TransactionRegistry(int accountId, String stockCode, String stockName, Date dateTime, ActionType actionType, float price) {
 		this.accountId = accountId;
 		this.stockCode = stockCode;
 		this.stockName = stockName;
 		this.dateTime = dateTime;
 		this.actionType = actionType;
+		this.price = price;
 	}
 }

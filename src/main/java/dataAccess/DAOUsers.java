@@ -82,14 +82,3 @@ public final class DAOUsers extends DAO {
 		}
 	}
 }
-
-//" CALL sp_store_user("
-//+ "'"+ user.name +"',"
-//+ "'"+ user.email +"',"
-//+ "'"+ user.password +"',"
-//+ "'"+ user.userInfo.completeName +"',"
-//+ "'"+ user.userInfo.phone +"',"
-//+ UserInfo.getPersonTypeValue(user.userInfo.personTypeId) +","
-//+ "'"+ user.userInfo.document + "',"
-//+ " @userId); "
-//+ " SELECT @userId; ";

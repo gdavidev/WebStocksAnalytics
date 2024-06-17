@@ -211,96 +211,106 @@ select * from accounts;
 INSERT INTO actionTypes(actionDesc)
 VALUES ('buy'), ('sell');
 
--- GERENERATE TRANSACTION REGISTRY --
+-- GERENERATE TRANSACTION REGISTRY 2.0 --
 DROP PROCEDURE IF EXISTS createTransactionRegistry;
 DELIMITER // 
-CREATE PROCEDURE createTransactionRegistry(IN totalIterations INT)
+CREATE PROCEDURE createTransactionRegistry()
 BEGIN
-	DECLARE moment DATETIME DEFAULT DATE_ADD(CURDATE(), INTERVAL -totalIterations DAY);
+	-- AccountData
+    DECLARE currentAccountId INT DEFAULT 1;
+    
+    -- StockData
+    DECLARE currentStockId INT DEFAULT 0;
+	DECLARE currentGracePeriodDays INT DEFAULT 0;
+    DECLARE currentStockPrice FLOAT DEFAULT 0.0;
+    DECLARE currentMoment DATETIME DEFAULT CURDATE();
     DECLARE canSellStock BOOL DEFAULT 0;
     DECLARE hasEnoughToSell BOOL DEFAULT 0;
-    DECLARE gracePeriodDays INT DEFAULT 0;
-    
-    -- IDs
-    DECLARE currentAccountId INT DEFAULT 1;
-    DECLARE currentStockId INT DEFAULT 1;
     
     -- Iteration Counters
-    DECLARE currentIteration INT DEFAULT -1;
     DECLARE currentAccount INT DEFAULT 0;
-    DECLARE currentStock INT DEFAULT 0;
+    DECLARE currentStockHistoryRow INT DEFAULT 0;
+    DECLARE totalIterations INT DEFAULT 0;
     
     -- Total Inner Iterations
     DECLARE accountCount INT;
-    DECLARE stockCount INT;
+    DECLARE stockHistoryRowCount INT;
     
     -- Aux Tables
-    DROP TABLE IF EXISTS stockInfo;
-	CREATE TABLE stockInfo SELECT ROW_NUMBER() OVER() AS rowNum, id, gracePeriodDays FROM stocks;
-    DROP TABLE IF EXISTS autoInvestAccountIds;
-	CREATE TABLE autoInvestAccountIds SELECT ROW_NUMBER() OVER() AS rowNum, id FROM accounts WHERE accountTypeId = 3;
+    DROP TABLE IF EXISTS auxStockHistory;
+	CREATE TABLE auxStockHistory SELECT ROW_NUMBER() OVER(ORDER BY sh.moment) AS rowNum, s.id AS stockId, s.gracePeriodDays AS gracePeriodDays, sh.price AS price, sh.moment AS moment
+									FROM stockhistory sh
+									INNER JOIN stocks s ON s.id = sh.stockId;
+    DROP TABLE IF EXISTS auxAutoInvestAccountIds;
+	CREATE TABLE auxAutoInvestAccountIds SELECT ROW_NUMBER() OVER() AS rowNum, id FROM accounts WHERE accountTypeId = 3;
     
     -- Set Total Inner Iterations Variables
-	SELECT COUNT(*) INTO accountCount FROM autoInvestAccountIds;
-	SELECT COUNT(*) INTO stockCount FROM stockInfo;
-       
-	mainLoop: WHILE currentIteration < totalIterations DO
-		SET moment = DATE_ADD(moment, INTERVAL 1 DAY);
-		SET currentIteration = currentIteration + 1;        
-        SET currentAccount = 1;
-		SET currentStock = 1;
+	SELECT COUNT(*) INTO accountCount FROM auxAutoInvestAccountIds;
+	SELECT COUNT(*) INTO stockHistoryRowCount FROM auxStockHistory;
     
+	stockLoop: WHILE currentStockHistoryRow < stockHistoryRowCount DO
+		SET currentStockHistoryRow = currentStockHistoryRow + 1;
+        
+        SELECT stockid, gracePeriodDays, price, moment
+        INTO currentStockId, currentGracePeriodDays, currentStockPrice, currentMoment
+        FROM auxStockHistory
+        WHERE rowNum = currentStockHistoryRow;
+        
+        SET currentAccount = 0;
 		accountLoop: WHILE currentAccount < accountCount DO
 			SET currentAccount = currentAccount + 1;
-            IF RAND() < 0.60 THEN -- 60% change of current account do nothing this iteration
+			SELECT id INTO currentAccountId FROM auxAutoInvestAccountIds WHERE rowNum = currentAccount;
+			IF RAND() < 0.60 THEN -- 60% chance account will do nothing
 				ITERATE accountLoop;
-			END IF;
+            END IF;
             
-			SELECT id INTO currentAccountId FROM autoInvestAccountIds WHERE rowNum = currentAccount;
-			stockLoop: WHILE currentStock < stockCount DO
-				SET currentStock = currentStock + 1;
-                
-                SELECT id INTO currentStockId FROM stockInfo WHERE rowNum = currentStock; 
-                IF RAND() < 0.50 THEN -- 50% That will sell
-					SELECT t1.boughtCount > t2.soldCount INTO hasEnoughToSell
-					FROM (SELECT COUNT(*) AS boughtCount FROM transactionregistry WHERE actionId = 1 AND accountId = 55 AND stockId = 22) AS t1
-					INNER JOIN (SELECT COUNT(*) AS soldCount FROM transactionregistry WHERE actionId = 2 AND accountId = 55 AND stockId = 22) AS t2;
-                    
-                    IF hasEnoughToSell = 1 THEN                    
-						SELECT gracePeriodDays INTO gracePeriodDays FROM stockInfo WHERE id = currentStockId;
-						IF gracePeriodDays > 0 THEN						
-							SELECT COUNT(*) > 0 INTO canSellStock
-							FROM transactionRegistry 
-							INNER JOIN stockInfo ON stockInfo.Id = transactionRegistry.stockId
-							WHERE transactionRegistry.actionId = 1 -- (1 = buy operation);
-								AND DATE_ADD(transactionRegistry.actionDate, INTERVAL stockInfo.gracePeriodDays DAY) < moment;
-							IF canSellStock = 1 THEN
-								-- SELL STOCK
-								INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate)
-								VALUES (currentAccountId, currentStockId, 2, moment);
-							END IF;
-						ELSE
-                            -- SELL STOCK
-							INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate)
-							VALUES (currentAccountId, currentStockId, 2, moment);
+			IF RAND() < 0.30 THEN -- 30% That will sell
+				SELECT t1.boughtCount > t2.soldCount INTO hasEnoughToSell
+				FROM (
+					SELECT COUNT(*) AS boughtCount
+					FROM transactionregistry
+					WHERE accountId = currentAccountId
+						AND stockId = currentStockId
+						AND actionId = 1) AS t1
+				INNER JOIN (
+					SELECT COUNT(*) AS soldCount
+					FROM transactionregistry
+					WHERE accountId = currentAccountId
+						AND stockId = currentStockId
+						AND actionId = 2) AS t2;
+				
+				IF hasEnoughToSell = 1 THEN
+					IF currentGracePeriodDays > 0 THEN
+						SELECT COUNT(*) > 0 INTO canSellStock
+						FROM transactionRegistry 
+						INNER JOIN auxStockHistory ON auxStockHistory.stockId = transactionRegistry.stockId
+						WHERE transactionRegistry.actionId = 1 -- (1 = buy operation);
+							AND DATE_ADD(transactionRegistry.actionDate, INTERVAL auxStockHistory.gracePeriodDays DAY) < currentMoment;
+						IF canSellStock = 1 THEN
+							-- SELL STOCK
+							INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate, price)
+							VALUES (currentAccountId, currentStockId, 2, currentMoment, currentStockPrice);
 						END IF;
-                    END IF;
-                END IF;
-                
-                IF RAND() < 0.50 THEN -- 50% that will buy
-					-- BUY STOCK
-					INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate)
-					VALUES (currentAccountId, currentStockId, 1, moment);
-                END IF;
-                
-			END WHILE;
-        END WHILE;
+					ELSE
+						-- SELL STOCK
+						INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate, price)
+						VALUES (currentAccountId, currentStockId, 2, currentMoment, currentStockPrice);
+					END IF;
+				END IF;
+			END IF;
+			
+			IF RAND() < 0.30 THEN -- 30% that will buy
+				-- BUY STOCK
+				INSERT INTO transactionRegistry(accountId, stockId, actionId, actionDate, price)
+				VALUES (currentAccountId, currentStockId, 1, currentMoment, currentStockPrice);
+			END IF;
+		END WHILE;   
 	END WHILE;
     
-    DROP TABLE IF EXISTS accountIds;
-	DROP TABLE IF EXISTS stockInfo;
+    DROP TABLE IF EXISTS auxAutoInvestAccountIds;
+	DROP TABLE IF EXISTS auxStockHistory;
 END //
 DELIMITER ; 
-CALL createTransactionRegistry(200);
+CALL createTransactionRegistry();
 SELECT * FROM transactionRegistry;
 SELECT COUNT(*) FROM transactionRegistry;

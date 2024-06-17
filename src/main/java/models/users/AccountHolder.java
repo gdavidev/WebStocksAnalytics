@@ -26,4 +26,16 @@ public class AccountHolder {
 		this.idrAccount = idrAccount;
 		this.autoInvestmentAccount = autoInvestmentAccount;
 	}
+	
+	public float getTotalBalance() {
+		return	  (this.autoInvestmentAccount 	!= null ? this.autoInvestmentAccount.balance 	: 0)
+				+ (this.idrAccount	 			!= null ? this.idrAccount.balance 				: 0)
+				+ (this.checkingAccount 		!= null ? this.checkingAccount.balance 			: 0);
+	}
+	
+	public float getTotalTax() {
+		return 	  (this.autoInvestmentAccount 	!= null ? this.autoInvestmentAccount.getTaxedAmount() 	: 0)
+				+ (this.idrAccount	 			!= null ? this.idrAccount.getTaxedAmount() 				: 0)
+				+ (this.checkingAccount 		!= null ? this.checkingAccount.getTaxedAmount() 		: 0);
+	}
 }

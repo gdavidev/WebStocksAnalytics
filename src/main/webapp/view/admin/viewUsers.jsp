@@ -26,12 +26,13 @@
 		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque mauris velit, posuere nec mollis a, blandit ut neque. Maecenas iaculis tellus turpis. Cras tincidunt odio ac libero cursus, in porta magna viverra. Nam rhoncus a mauris vitae aliquam. Sed et feugiat quam. Nullam posuere laoreet risus, et euismod nibh tempus nec. Donec vehicula congue ipsum non laoreet.</p><br>
 		
 		<h2>All Users</h2>
-		<table class="table table-striped w-100 align-self-center">
+		<table class="table table-striped w-100 align-self-center align-middle">
 			<thead>
 				<tr>
 					<th colspan="3" scope="colgroup" rowspan="2" class="align-middle text-center">Account Holder Info</th>
 					<th colspan="6" scope="colgroup" class="text-center">Accounts</th>
 					<th colspan="2" scope="colgroup" rowspan="2" class="align-middle text-center">Total</th>
+					<th colspan="1" scope="colgroup" rowspan="2" class="align-middle text-center"></th>
 				</tr>
 				<tr>
 					<th colspan="2" scope="col" class="text-center">Checking</th>
@@ -59,14 +60,8 @@
 					IdrAccount idrAccount = accountHolder.idrAccount;
 					AutoInvestmentAccount autoInvAccount = accountHolder.autoInvestmentAccount;
 										
-					float totalBalance = 
-							  (autoInvAccount 	!= null ? autoInvAccount.balance 	: 0)
-							+ (idrAccount	 	!= null ? idrAccount.balance 		: 0)
-							+ (checkingAccount 	!= null ? checkingAccount.balance 	: 0);
-					float totalTax = 
-							  (autoInvAccount 	!= null ? autoInvAccount.getTaxedAmount() 	: 0)
-							+ (idrAccount	 	!= null ? idrAccount.getTaxedAmount() 		: 0)
-							+ (checkingAccount 	!= null ? checkingAccount.getTaxedAmount() 	: 0);
+					float totalBalance = accountHolder.getTotalBalance();
+					float totalTax = accountHolder.getTotalTax();
 					finalTotalBalance += totalBalance;
 					finalTotalTax += totalTax;
 				%>
@@ -102,6 +97,13 @@
 						<td></td>
 						<td></td>
 					<% } %>
+					<td>
+						<%if (accountHolder.autoInvestmentAccount != null) { %>
+							<a class="btn btn-info" href="<%= request.getContextPath() %>/admin/viewUser?userId=<%=accountHolder.holderId %>">Profile</a>
+						<%} else { %>
+							<button class="btn btn-secondary" disabled>Profile</button>
+						<%} %>
+					</td>
 				</tr>						
 				<%} %>
 				<tr>

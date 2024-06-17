@@ -63,10 +63,11 @@ CREATE TABLE transactionRegistry (
     stockId 	INT NOT NULL,
     actionId	INT NOT NULL,
     actionDate	DATETIME NOT NULL,
+    price 		FLOAT NOT NULL,
     FOREIGN KEY (accountId) REFERENCES accounts(id),
     FOREIGN KEY (stockId) REFERENCES stocks(id),
     FOREIGN KEY (actionId) REFERENCES actionTypes(id)
-);
+); -- DROP TABLE transactionRegistry;
 
 WITH hiestHighsTable AS (
 	WITH resultTable AS (
@@ -92,6 +93,14 @@ LIMIT 10;
 SELECT * FROM users;
 SELECT * FROM userinfo;
 SELECT * FROM stocks;
+SELECT * FROM accounts;
+SELECT * FROM accounttypes;
+SELECT * FROM transactionregistry;
+
+SELECT s.stockCode, s.companyName, tr.actionId, tr.actionDate FROM transactionregistry AS tr
+INNER JOIN stocks s ON s.id = tr.stockId 
+WHERE tr.accountId = 22
+ORDER BY actionDate ASC;
 
 UPDATE users SET isAdmin = 1 WHERE userName = 'MechAAV';
 SELECT stockId, price, MAX(moment) FROM stockhistory GROUP BY stockId;

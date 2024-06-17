@@ -2,13 +2,11 @@ package controllers;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import dataAccess.DAOAccountHolder;
 import dataAccess.DAOStocks;
 import dataAccess.DAOTransactionHistory;
@@ -55,8 +53,9 @@ public class SimulationController extends HttpServlet {
 	}
 	
 	private void SetupViewUserPage(HttpServletRequest request) {
-		User user = daoUsers.getUser((int) request.getAttribute("userId"));
-		AccountHolder accountHolder = daoAccountHolder.getAccountHolder((int) request.getAttribute("userId"));
+		int userId = Integer.parseInt(request.getParameter("userId"));
+		User user = daoUsers.getUser(userId);
+		AccountHolder accountHolder = daoAccountHolder.getAccountHolder(userId);
 		ArrayList<TransactionRegistry> trList = daoTransactionHistory.getTransactionHistoryFromAccount(accountHolder.autoInvestmentAccount.getId());
 		
 		request.setAttribute("targetUser", user);

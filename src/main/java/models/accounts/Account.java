@@ -40,11 +40,4 @@ public abstract class Account {
 	public float getTaxedAmount() {
 		return 0f;
 	}
-	
-	static final Boolean buyStock(int stockId) {
-		return false;
-	}
-	static final Boolean sellStock(int stockId) {
-		return false;
-	}
 }
